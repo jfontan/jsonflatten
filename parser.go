@@ -94,7 +94,7 @@ func (p *Parser) Parse(r io.Reader) error {
 		case string:
 			if p.states.Last() == StateArray {
 				p.path = append(p.path, strconv.Itoa(p.arrayCounter))
-				println(strings.Join(p.path, "."), p.lastKey, "=", v)
+				println(p.path.String(), "=", v)
 				p.path = p.path[:len(p.path)-1]
 				p.arrayCounter++
 				break
