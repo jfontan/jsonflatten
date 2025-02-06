@@ -81,12 +81,19 @@ func (p *Parser) Parse(r io.Reader) error {
 			case '[':
 				p.states.Push(StateArray)
 				p.arrayCounter = 0
+				if p.lastKey != "" {
+					p.path = append(p.path, p.lastKey)
+					p.lastKey = ""
+				}
 			case ']':
 				if p.states.Last() != StateArray {
 					return fmt.Errorf("invalid char %s", string(v))
 				}
 				p.states.Pop()
 				p.arrayCounter = 0
+				if len(p.path) > 0 {
+					p.path = p.path[:len(p.path)-1]
+				}
 			default:
 				return fmt.Errorf("invalid delimiter %s", string(v))
 			}
@@ -94,7 +101,7 @@ func (p *Parser) Parse(r io.Reader) error {
 		case string:
 			if p.states.Last() == StateArray {
 				p.path = append(p.path, strconv.Itoa(p.arrayCounter))
-				println(p.path.String(), "=", v)
+				fmt.Println(p.path.String(), "=", v)
 				p.path = p.path[:len(p.path)-1]
 				p.arrayCounter++
 				break
@@ -103,12 +110,25 @@ func (p *Parser) Parse(r io.Reader) error {
 			if p.lastKey == "" {
 				p.lastKey = v
 			} else {
-				println(p.path.StringWithKey(p.lastKey), "=", v)
+				fmt.Println(p.path.StringWithKey(p.lastKey), "=", v)
 				p.lastKey = ""
 			}
 
+		case float64:
+			fmt.Println(p.path.StringWithKey(p.lastKey), "=", fmt.Sprintf("%f", v))
+			p.lastKey = ""
+
+		case bool:
+			fmt.Println(p.path.StringWithKey(p.lastKey), "=", fmt.Sprintf("%v", v))
+			p.lastKey = ""
+
+		case nil:
+			fmt.Println(p.path.StringWithKey(p.lastKey), "=", "nil")
+			p.lastKey = ""
+
 		default:
-			println("invalid type")
+			fmt.Printf("invalid type: %+v\n", v)
+			p.lastKey = ""
 		}
 	}
 }
