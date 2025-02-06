@@ -39,10 +39,10 @@ const (
 )
 
 type Parser struct {
-	path         path
-	states       *States
-	lastKey      string
-	arrayCounter int
+	path          path
+	states        *States
+	lastKey       string
+	arrayCounters []int
 }
 
 func (p *Parser) Parse(r io.Reader) error {
@@ -80,7 +80,7 @@ func (p *Parser) Parse(r io.Reader) error {
 				}
 			case '[':
 				p.states.Push(StateArray)
-				p.arrayCounter = 0
+				p.arrayCounters = append(p.arrayCounters, 0)
 				if p.lastKey != "" {
 					p.path = append(p.path, p.lastKey)
 					p.lastKey = ""
@@ -90,7 +90,7 @@ func (p *Parser) Parse(r io.Reader) error {
 					return fmt.Errorf("invalid char %s", string(v))
 				}
 				p.states.Pop()
-				p.arrayCounter = 0
+				p.arrayCounters = p.arrayCounters[:len(p.arrayCounters)-1]
 				if len(p.path) > 0 {
 					p.path = p.path[:len(p.path)-1]
 				}
@@ -100,10 +100,10 @@ func (p *Parser) Parse(r io.Reader) error {
 
 		case string:
 			if p.states.Last() == StateArray {
-				p.path = append(p.path, strconv.Itoa(p.arrayCounter))
+				p.path = append(p.path, strconv.Itoa(p.arrayCounters[len(p.arrayCounters)-1]))
 				fmt.Println(p.path.String(), "=", v)
 				p.path = p.path[:len(p.path)-1]
-				p.arrayCounter++
+				p.arrayCounters[len(p.arrayCounters)-1] += 1
 				break
 			}
 

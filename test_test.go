@@ -1,6 +1,7 @@
 package jsonflatten
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -28,7 +29,18 @@ const testJson = `
                 }
             }
         }
-    }
+    },
+    "array": [
+    	{
+     		"one": 1,
+       		"two": 2
+        },
+       	{
+      		"three": 1,
+      		"four": 2,
+           	"embedded": [1, 2, 3]
+        },
+    ]
 }
 `
 
@@ -36,5 +48,14 @@ func TestTest(t *testing.T) {
 	r := strings.NewReader(testJson)
 	p := new(Parser)
 	err := p.Parse(r)
+	require.NoError(t, err)
+}
+
+func TestLarge(t *testing.T) {
+	f, err := os.Open("large-file.json")
+	require.NoError(t, err)
+
+	p := new(Parser)
+	err = p.Parse(f)
 	require.NoError(t, err)
 }
