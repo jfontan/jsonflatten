@@ -129,12 +129,12 @@ func (p *Parser) Parse(r io.Reader) error {
 				if s.key == "" {
 					s.key = v
 				} else {
-					p.print(s.key, v)
+					p.emit(s.key, v)
 					s.key = ""
 				}
 
 			case TypeArray:
-				p.print(s.key, v)
+				p.emit(s.key, v)
 				s.advance()
 
 			default:
@@ -206,19 +206,31 @@ func (p *Parser) commonEmiter(v any) error {
 		return fmt.Errorf("single value not supported")
 	}
 
-	p.print(s.key, v)
+	p.emit(s.key, v)
 	s.advance()
 
 	return nil
 }
 
-func (p *Parser) print(k string, v any) {
+func (p *Parser) emit(k string, v any) {
 	var path path
 	s := p.lastState()
 	if s != nil {
 		path = s.path
 	}
-	fmt.Println(path.StringWithKey(k), "=", fmt.Sprintf("%+v", v))
+	p.print(path.StringWithKey(k), v)
+}
+
+func (p *Parser) print(k string, v any) {
+	var value string
+	switch nv := v.(type) {
+	case string:
+		value = fmt.Sprintf(`"%s"`, nv)
+	default:
+		value = fmt.Sprintf("%v", nv)
+	}
+
+	fmt.Println(k, "=", value)
 }
 
 type path []string
