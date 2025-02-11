@@ -1,6 +1,8 @@
 package jsonflatten
 
 import (
+	"encoding/json"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -105,4 +107,58 @@ func TestLarge(t *testing.T) {
 	p := new(Parser)
 	err = p.Parse(f)
 	require.NoError(t, err)
+}
+
+func BenchmarkSmall(b *testing.B) {
+	for range b.N {
+		r := strings.NewReader(testJson)
+		p := new(Parser)
+		p.emitter = func(k string, v any) {
+		}
+
+		err := p.Parse(r)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkUnmarshalSmall(b *testing.B) {
+	for range b.N {
+		var m any
+		err := json.Unmarshal([]byte(testJson), &m)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkBig(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for range b.N {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		p := new(Parser)
+		p.emitter = func(k string, v any) {
+		}
+
+		err = p.Parse(f)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkUnmarshalBig(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for range b.N {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		var m any
+		decoder := json.NewDecoder(f)
+		err = decoder.Decode(&m)
+		require.NoError(b, err)
+	}
 }
