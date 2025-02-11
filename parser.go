@@ -73,11 +73,18 @@ func (s *State) advance() {
 
 type States []State
 
+type Emitter func(string, any)
+
 type Parser struct {
-	states States
+	states  States
+	emitter Emitter
 }
 
 func (p *Parser) Parse(r io.Reader) error {
+	if p.emitter == nil {
+		p.emitter = p.print
+	}
+
 	dec := json.NewDecoder(r)
 
 	for {
@@ -142,17 +149,17 @@ func (p *Parser) Parse(r io.Reader) error {
 			}
 
 		case float64:
-			if err := p.commonEmiter(v); err != nil {
+			if err := p.commonEmitter(v); err != nil {
 				return err
 			}
 
 		case bool:
-			if err := p.commonEmiter(v); err != nil {
+			if err := p.commonEmitter(v); err != nil {
 				return err
 			}
 
 		case nil:
-			if err := p.commonEmiter(v); err != nil {
+			if err := p.commonEmitter(v); err != nil {
 				return err
 			}
 
@@ -200,7 +207,7 @@ func (p *Parser) lastState() *State {
 	return &p.states[l]
 }
 
-func (p *Parser) commonEmiter(v any) error {
+func (p *Parser) commonEmitter(v any) error {
 	s := p.lastState()
 	if s == nil {
 		return fmt.Errorf("single value not supported")
@@ -218,7 +225,8 @@ func (p *Parser) emit(k string, v any) {
 	if s != nil {
 		path = s.path
 	}
-	p.print(path.StringWithKey(k), v)
+
+	p.emitter(path.StringWithKey(k), v)
 }
 
 func (p *Parser) print(k string, v any) {
