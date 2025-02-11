@@ -9,22 +9,22 @@ import (
 	"strings"
 )
 
-type State int
-type States []State
+type Type int
+type Types []Type
 
-func (s *States) Last() State {
+func (s *Types) Last() Type {
 	if len(*s) == 0 {
-		return StateUnknown
+		return TypeUnknown
 	}
 
 	return (*s)[len(*s)-1]
 }
 
-func (s *States) Push(st State) {
+func (s *Types) Push(st Type) {
 	(*s) = append(*s, st)
 }
 
-func (s *States) Pop() {
+func (s *Types) Pop() {
 	if len(*s) == 0 {
 		return
 	}
@@ -33,24 +33,68 @@ func (s *States) Pop() {
 }
 
 const (
-	StateUnknown = iota
-	StateObject
-	StateArray
+	TypeUnknown = iota
+	TypeObject
+	TypeArray
 )
 
+type State struct {
+	path         path
+	jsonType     Type
+	key          string
+	arrayCounter int
+}
+
+func NewState(t Type, p path) State {
+	key := ""
+	if t == TypeArray {
+		key = "0"
+	}
+	return State{
+		jsonType: t,
+		path:     p,
+		key:      key,
+	}
+}
+
+func (s *State) advance() {
+	if s == nil {
+		return
+	}
+
+	switch s.jsonType {
+	case TypeObject:
+		s.key = ""
+	case TypeArray:
+		s.arrayCounter++
+		s.key = strconv.Itoa(s.arrayCounter)
+	}
+}
+
+type States []State
+
+func (s States) LastKey() string {
+	if len(s) == 0 {
+		return ""
+	}
+
+	return s[len(s)-1].key
+}
+
+func (s States) Type() Type {
+	if len(s) == 0 {
+		return TypeUnknown
+	}
+
+	return s[len(s)-1].jsonType
+}
+
 type Parser struct {
-	path          path
-	states        *States
-	lastKey       string
-	arrayCounters []int
+	states States
 }
 
 func (p *Parser) Parse(r io.Reader) error {
 	dec := json.NewDecoder(r)
-
-	if p.states == nil {
-		p.states = new(States)
-	}
 
 	for {
 		token, err := dec.Token()
@@ -65,72 +109,132 @@ func (p *Parser) Parse(r io.Reader) error {
 		case json.Delim:
 			switch v {
 			case '{':
-				p.states.Push(StateObject)
-				if p.lastKey != "" {
-					p.path = append(p.path, p.lastKey)
-					p.lastKey = ""
-				}
+				p.pushState(TypeObject)
+
 			case '}':
-				if p.states.Last() != StateObject {
+				s := p.popState()
+				if s.jsonType != TypeObject {
 					return fmt.Errorf("invalid char %s", string(v))
 				}
-				p.states.Pop()
-				if len(p.path) > 0 {
-					p.path = p.path[:len(p.path)-1]
-				}
+
+				p.lastState().advance()
+
 			case '[':
-				p.states.Push(StateArray)
-				p.arrayCounters = append(p.arrayCounters, 0)
-				if p.lastKey != "" {
-					p.path = append(p.path, p.lastKey)
-					p.lastKey = ""
-				}
+				p.pushState(TypeArray)
+
 			case ']':
-				if p.states.Last() != StateArray {
+				s := p.popState()
+				if s.jsonType != TypeArray {
 					return fmt.Errorf("invalid char %s", string(v))
 				}
-				p.states.Pop()
-				p.arrayCounters = p.arrayCounters[:len(p.arrayCounters)-1]
-				if len(p.path) > 0 {
-					p.path = p.path[:len(p.path)-1]
-				}
+
+				p.lastState().advance()
+
 			default:
 				return fmt.Errorf("invalid delimiter %s", string(v))
 			}
 
 		case string:
-			if p.states.Last() == StateArray {
-				p.path = append(p.path, strconv.Itoa(p.arrayCounters[len(p.arrayCounters)-1]))
-				fmt.Println(p.path.String(), "=", v)
-				p.path = p.path[:len(p.path)-1]
-				p.arrayCounters[len(p.arrayCounters)-1] += 1
-				break
+			s := p.lastState()
+			if s == nil {
+				return fmt.Errorf("single strings not supported")
 			}
 
-			if p.lastKey == "" {
-				p.lastKey = v
-			} else {
-				fmt.Println(p.path.StringWithKey(p.lastKey), "=", v)
-				p.lastKey = ""
+			switch s.jsonType {
+			case TypeObject:
+				if s.key == "" {
+					s.key = v
+				} else {
+					p.print(s.key, v)
+					s.key = ""
+				}
+
+			case TypeArray:
+				p.print(s.key, v)
+				s.advance()
+
+			default:
+				return fmt.Errorf("invalid type %v", s.jsonType)
 			}
 
 		case float64:
-			fmt.Println(p.path.StringWithKey(p.lastKey), "=", fmt.Sprintf("%f", v))
-			p.lastKey = ""
+			s := p.lastState()
+			if s == nil {
+				return fmt.Errorf("single number not supported")
+			}
+
+			p.print(s.key, v)
+			s.advance()
 
 		case bool:
-			fmt.Println(p.path.StringWithKey(p.lastKey), "=", fmt.Sprintf("%v", v))
-			p.lastKey = ""
+			s := p.lastState()
+			if s == nil {
+				return fmt.Errorf("single bool not supported")
+			}
+
+			p.print(s.key, v)
+			s.advance()
 
 		case nil:
-			fmt.Println(p.path.StringWithKey(p.lastKey), "=", "nil")
-			p.lastKey = ""
+			s := p.lastState()
+			if s == nil {
+				return fmt.Errorf("single nil not supported")
+			}
+
+			p.print(s.key, v)
+			s.advance()
 
 		default:
-			fmt.Printf("invalid type: %+v\n", v)
-			p.lastKey = ""
+			return fmt.Errorf("invalid type: %+v", v)
 		}
 	}
+}
+
+func (p *Parser) pushState(t Type) {
+	var path path
+	var key string
+
+	s := p.lastState()
+	if s != nil {
+		path = s.path
+		key = s.key
+	}
+
+	if key != "" {
+		path = append(path, key)
+	}
+
+	p.states = append(p.states, NewState(t, path))
+}
+
+func (p *Parser) popState() State {
+	if len(p.states) == 0 {
+		return State{}
+	}
+
+	l := len(p.states) - 1
+	s := p.states[l]
+	p.states = p.states[:l]
+
+	return s
+}
+
+func (p *Parser) lastState() *State {
+	if len(p.states) == 0 {
+		return &State{}
+	}
+
+	l := len(p.states) - 1
+	return &p.states[l]
+}
+
+func (p *Parser) print(k string, v any) {
+	var path path
+	s := p.lastState()
+	if s != nil {
+		path = s.path
+	}
+	fmt.Println(path.StringWithKey(k), "=", fmt.Sprintf("%v", v))
 }
 
 type path []string

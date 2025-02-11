@@ -39,7 +39,7 @@ const testJson = `
       		"three": 1,
       		"four": 2,
            	"embedded": [1, 2, 3]
-        },
+        }
     ]
 }
 `
