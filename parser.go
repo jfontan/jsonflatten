@@ -73,22 +73,6 @@ func (s *State) advance() {
 
 type States []State
 
-func (s States) LastKey() string {
-	if len(s) == 0 {
-		return ""
-	}
-
-	return s[len(s)-1].key
-}
-
-func (s States) Type() Type {
-	if len(s) == 0 {
-		return TypeUnknown
-	}
-
-	return s[len(s)-1].jsonType
-}
-
 type Parser struct {
 	states States
 }
@@ -158,31 +142,19 @@ func (p *Parser) Parse(r io.Reader) error {
 			}
 
 		case float64:
-			s := p.lastState()
-			if s == nil {
-				return fmt.Errorf("single number not supported")
+			if err := p.commonEmiter(v); err != nil {
+				return err
 			}
-
-			p.print(s.key, v)
-			s.advance()
 
 		case bool:
-			s := p.lastState()
-			if s == nil {
-				return fmt.Errorf("single bool not supported")
+			if err := p.commonEmiter(v); err != nil {
+				return err
 			}
-
-			p.print(s.key, v)
-			s.advance()
 
 		case nil:
-			s := p.lastState()
-			if s == nil {
-				return fmt.Errorf("single nil not supported")
+			if err := p.commonEmiter(v); err != nil {
+				return err
 			}
-
-			p.print(s.key, v)
-			s.advance()
 
 		default:
 			return fmt.Errorf("invalid type: %+v", v)
@@ -228,13 +200,25 @@ func (p *Parser) lastState() *State {
 	return &p.states[l]
 }
 
+func (p *Parser) commonEmiter(v any) error {
+	s := p.lastState()
+	if s == nil {
+		return fmt.Errorf("single value not supported")
+	}
+
+	p.print(s.key, v)
+	s.advance()
+
+	return nil
+}
+
 func (p *Parser) print(k string, v any) {
 	var path path
 	s := p.lastState()
 	if s != nil {
 		path = s.path
 	}
-	fmt.Println(path.StringWithKey(k), "=", fmt.Sprintf("%v", v))
+	fmt.Println(path.StringWithKey(k), "=", fmt.Sprintf("%+v", v))
 }
 
 type path []string
