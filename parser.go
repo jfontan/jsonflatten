@@ -50,6 +50,10 @@ func NewState(t Type, p path) State {
 	if t == TypeArray {
 		key = "0"
 	}
+
+	if len(p) == 0 {
+		p = make(path, 0, 64)
+	}
 	return State{
 		jsonType: t,
 		path:     p,

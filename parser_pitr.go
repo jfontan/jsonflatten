@@ -15,7 +15,7 @@ type ParserPitr struct {
 	emitter Emitter
 }
 
-const bufferSize = 1024 * 1024
+const bufferSize = 64 * 1024
 
 func (p *ParserPitr) Parse(r io.Reader) error {
 	if p.emitter == nil {
