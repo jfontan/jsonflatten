@@ -190,6 +190,7 @@ func TestMapMemory(t *testing.T) {
 
 	require.Equal(t, expected, m)
 }
+
 func TestLarge(t *testing.T) {
 	t.Skip()
 	f, err := os.Open("large-file.json")
@@ -216,6 +217,18 @@ func BenchmarkSmallPitr(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(ParserPitr)
+		p.emitter = func(k string, v any) {
+		}
+
+		err := p.Parse(r)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkSmallMemory(b *testing.B) {
+	for range b.N {
+		r := strings.NewReader(testJson)
+		p := new(Memory)
 		p.emitter = func(k string, v any) {
 		}
 
@@ -260,6 +273,24 @@ func BenchmarkBigPitr(b *testing.B) {
 		require.NoError(b, err)
 
 		p := new(ParserPitr)
+		p.emitter = func(k string, v any) {
+		}
+
+		err = p.Parse(f)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkBigMemory(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for range b.N {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		p := new(Memory)
 		p.emitter = func(k string, v any) {
 		}
 
