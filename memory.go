@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 type Memory struct {
@@ -16,7 +14,9 @@ type Memory struct {
 func (m *Memory) Parse(r io.Reader) error {
 	dec := json.NewDecoder(r)
 
-	m.emitter = m.print
+	if m.emitter == nil {
+		m.emitter = m.print
+	}
 
 	var d any
 	err := dec.Decode(&d)
@@ -68,7 +68,6 @@ func (m *Memory) parseMap(v map[string]any) error {
 }
 
 func (m *Memory) parseArray(a []any) error {
-	spew.Dump(m.lastState())
 	m.pushState(TypeArray)
 
 	s := m.lastState()
