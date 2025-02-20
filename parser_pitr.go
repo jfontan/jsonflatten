@@ -11,7 +11,7 @@ import (
 )
 
 type ParserPitr struct {
-	states  States
+	States
 	emitter Emitter
 }
 
@@ -134,44 +134,6 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 			return fmt.Errorf("invalid type: %d", token)
 		}
 	}
-}
-
-func (p *ParserPitr) pushState(t Type) {
-	var path path
-	var key string
-
-	s := p.lastState()
-	if s != nil {
-		path = s.path
-		key = s.key
-	}
-
-	if key != "" {
-		path = append(path, key)
-	}
-
-	p.states = append(p.states, NewState(t, path))
-}
-
-func (p *ParserPitr) popState() State {
-	if len(p.states) == 0 {
-		return State{}
-	}
-
-	l := len(p.states) - 1
-	s := p.states[l]
-	p.states = p.states[:l]
-
-	return s
-}
-
-func (p *ParserPitr) lastState() *State {
-	if len(p.states) == 0 {
-		return &State{}
-	}
-
-	l := len(p.states) - 1
-	return &p.states[l]
 }
 
 func (p *ParserPitr) commonEmitter(v any) error {

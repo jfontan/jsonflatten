@@ -5,82 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strconv"
 	"strings"
 )
-
-type Type int
-type Types []Type
-
-func (s *Types) Last() Type {
-	if len(*s) == 0 {
-		return TypeUnknown
-	}
-
-	return (*s)[len(*s)-1]
-}
-
-func (s *Types) Push(st Type) {
-	(*s) = append(*s, st)
-}
-
-func (s *Types) Pop() {
-	if len(*s) == 0 {
-		return
-	}
-
-	*s = (*s)[:len(*s)-1]
-}
-
-const (
-	TypeUnknown = iota
-	TypeObject
-	TypeArray
-)
-
-type State struct {
-	path         path
-	jsonType     Type
-	key          string
-	arrayCounter int
-}
-
-func NewState(t Type, p path) State {
-	key := ""
-	if t == TypeArray {
-		key = "0"
-	}
-
-	if len(p) == 0 {
-		p = make(path, 0, 64)
-	}
-	return State{
-		jsonType: t,
-		path:     p,
-		key:      key,
-	}
-}
-
-func (s *State) advance() {
-	if s == nil {
-		return
-	}
-
-	switch s.jsonType {
-	case TypeObject:
-		s.key = ""
-	case TypeArray:
-		s.arrayCounter++
-		s.key = strconv.Itoa(s.arrayCounter)
-	}
-}
-
-type States []State
 
 type Emitter func(string, any)
 
 type Parser struct {
-	states  States
+	States
 	emitter Emitter
 }
 
@@ -171,44 +102,6 @@ func (p *Parser) Parse(r io.Reader) error {
 			return fmt.Errorf("invalid type: %+v", v)
 		}
 	}
-}
-
-func (p *Parser) pushState(t Type) {
-	var path path
-	var key string
-
-	s := p.lastState()
-	if s != nil {
-		path = s.path
-		key = s.key
-	}
-
-	if key != "" {
-		path = append(path, key)
-	}
-
-	p.states = append(p.states, NewState(t, path))
-}
-
-func (p *Parser) popState() State {
-	if len(p.states) == 0 {
-		return State{}
-	}
-
-	l := len(p.states) - 1
-	s := p.states[l]
-	p.states = p.states[:l]
-
-	return s
-}
-
-func (p *Parser) lastState() *State {
-	if len(p.states) == 0 {
-		return &State{}
-	}
-
-	l := len(p.states) - 1
-	return &p.states[l]
 }
 
 func (p *Parser) commonEmitter(v any) error {

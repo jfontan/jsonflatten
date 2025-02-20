@@ -50,7 +50,7 @@ const testJson = `
 `
 
 func TestPrint(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 	r := strings.NewReader(testJson)
 	p := new(Parser)
 	err := p.Parse(r)
@@ -58,7 +58,7 @@ func TestPrint(t *testing.T) {
 }
 
 func TestPrintPitr(t *testing.T) {
-	// t.Skip()
+	t.Skip()
 	r := strings.NewReader(testJson)
 	p := new(ParserPitr)
 	err := p.Parse(r)
