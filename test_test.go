@@ -201,6 +201,16 @@ func TestLarge(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestLargePitr(t *testing.T) {
+	f, err := os.Open("large-file.json")
+	require.NoError(t, err)
+
+	p := new(ParserPitr)
+	p.emitter = func(s string, a any) {}
+	err = p.Parse(f)
+	require.NoError(t, err)
+}
+
 func BenchmarkSmall(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)

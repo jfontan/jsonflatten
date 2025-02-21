@@ -15,7 +15,10 @@ type ParserPitr struct {
 	emitter Emitter
 }
 
-const bufferSize = 64 * 1024
+const (
+	bufferSize = 64 * 1024
+	readSize   = 4 * 1024
+)
 
 func (p *ParserPitr) Parse(r io.Reader) error {
 	if p.emitter == nil {
@@ -25,7 +28,7 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 	backBuffer := make([]byte, bufferSize)
 	buf := bytes.NewBuffer(backBuffer)
 
-	dec := jsontokenizer.New(r)
+	dec := jsontokenizer.NewWithSize(r, readSize)
 
 	for {
 		token, err := dec.Token()
