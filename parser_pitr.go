@@ -1,11 +1,11 @@
 package jsonflatten
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 
 	"pitr.ca/jsontokenizer"
 )
@@ -25,8 +25,7 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 		p.emitter = p.print
 	}
 
-	backBuffer := make([]byte, bufferSize)
-	buf := bytes.NewBuffer(backBuffer)
+	buf := new(strings.Builder)
 
 	dec := jsontokenizer.NewWithSize(r, readSize)
 
