@@ -20,7 +20,7 @@ const (
 	readSize = 4 * 1024
 )
 
-// NewParserPitr creates a new parser using Pitr tokenizer. If emmiter is nil
+// NewParserPitr creates a new parser using Pitr tokenizer. If emitter is nil
 // a default printer is used.
 func NewParserPitr(emitter Emitter) *ParserPitr {
 	return &ParserPitr{

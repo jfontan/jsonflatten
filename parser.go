@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Emmitter is a function that is called for each value.
+// Emitter is a function that is called for each value.
 type Emitter func(string, any)
 
 // Parser implements a json value flattener using standard library tokenizer.

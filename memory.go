@@ -6,7 +6,7 @@ import (
 	"io"
 )
 
-// Memory flattens a json document loading it first in memody by standard
+// Memory flattens a json document loading it first in memory by standard
 // library json decoder and calling an emitter for each value.
 type Memory struct {
 	States

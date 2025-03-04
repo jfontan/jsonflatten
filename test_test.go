@@ -211,7 +211,7 @@ func TestLargePitr(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func BenchmarkSmall(b *testing.B) {
+func BenchmarkSmallParser(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(Parser)
@@ -223,7 +223,7 @@ func BenchmarkSmall(b *testing.B) {
 	}
 }
 
-func BenchmarkSmallPitr(b *testing.B) {
+func BenchmarkSmallParserPitr(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(ParserPitr)
@@ -255,7 +255,7 @@ func BenchmarkUnmarshalSmall(b *testing.B) {
 	}
 }
 
-func BenchmarkBig(b *testing.B) {
+func BenchmarkBigParser(b *testing.B) {
 	f, err := os.Open("large-file.json")
 	require.NoError(b, err)
 	defer f.Close()
@@ -273,7 +273,7 @@ func BenchmarkBig(b *testing.B) {
 	}
 }
 
-func BenchmarkBigPitr(b *testing.B) {
+func BenchmarkBigParserPitr(b *testing.B) {
 	f, err := os.Open("large-file.json")
 	require.NoError(b, err)
 	defer f.Close()
