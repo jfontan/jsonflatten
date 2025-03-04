@@ -8,40 +8,40 @@ For example, this JSON:
 
 ```json
 {
-    "glossary": {
-        "title": "example glossary",
-		"GlossDiv": {
-            "title": "S",
-			"GlossList": {
-                "GlossEntry": {
-                    "ID": "SGML",
-					"SortAs": "SGML",
-					"GlossTerm": "Standard Generalized Markup Language",
-					"Acronym": "SGML",
-					"Abbrev": "ISO 8879:1986",
-					"GlossDef": {
-                        "para": "A meta-markup language, used to create markup languages such as DocBook.",
-						"GlossSeeAlso": ["GML", "XML"]
-                    },
-					"GlossSee": "markup",
-					"float64": 42,
-					"bool": true,
-					"null": null
-                }
-            }
+  "glossary": {
+    "title": "example glossary",
+    "GlossDiv": {
+      "title": "S",
+      "GlossList": {
+        "GlossEntry": {
+          "ID": "SGML",
+          "SortAs": "SGML",
+          "GlossTerm": "Standard Generalized Markup Language",
+          "Acronym": "SGML",
+          "Abbrev": "ISO 8879:1986",
+          "GlossDef": {
+            "para": "A meta-markup language, used to create markup languages such as DocBook.",
+            "GlossSeeAlso": ["GML", "XML"]
+          },
+          "GlossSee": "markup",
+          "float64": 42,
+          "bool": true,
+          "null": null
         }
+      }
+    }
+  },
+  "array": [
+    {
+      "one": 1,
+      "two": 2
     },
-    "array": [
-    	{
-     		"one": 1,
-       		"two": 2
-        },
-       	{
-      		"three": 1,
-      		"four": 2,
-           	"embedded": [1, 2, 3, true, null, "string"]
-        }
-    ]
+    {
+      "three": 1,
+      "four": 2,
+      "embedded": [1, 2, 3, true, null, "string"]
+    }
+  ]
 }
 ```
 
@@ -74,20 +74,18 @@ array.1.embedded.4 = <nil>
 array.1.embedded.5 = "string"
 ```
 
-
 ## Versions
 
-* `Parser`: this version uses the standard json package tokenizer. Emits all the values with the key that represents the path to them. It is done in an stream fashion so the values are emitted as they are found.
-* `ParserPitr`: does the same as `Parser` but uses another tokenizer: https://pkg.go.dev/pitr.ca/jsontokenizer
-* `Memory`: this one unmarshals the whole JSON object in memory using standard json package and iterates over all the values in it. It is used to test the difference with the other parsers.
-
+- `Parser`: this version uses the standard json package tokenizer. Emits all the values with the key that represents the path to them. It is done in an stream fashion so the values are emitted as they are found.
+- `ParserPitr`: does the same as `Parser` but uses another tokenizer: https://pkg.go.dev/pitr.ca/jsontokenizer
+- `Memory`: this one unmarshals the whole JSON object in memory using standard json package and iterates over all the values in it. It is used to test the difference with the other parsers.
 
 ## Benchmark
 
 There are two sizes of objects tested:
 
-* `Small`: 49 lines of JSON. Also has arrays to check that it properly handles them.
-* `Big`: the file `large-file.json` that is 25 Mb of JSON.
+- `Small`: 49 lines of JSON. Also has arrays to check that it properly handles them.
+- `Big`: the file `large-file.json` that is 25 Mb of JSON.
 
 Besides the parsers described before it also benchmarks just unmarshalling the object to memory.
 
