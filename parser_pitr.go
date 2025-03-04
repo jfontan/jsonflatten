@@ -16,8 +16,7 @@ type ParserPitr struct {
 }
 
 const (
-	bufferSize = 64 * 1024
-	readSize   = 4 * 1024
+	readSize = 4 * 1024
 )
 
 func (p *ParserPitr) Parse(r io.Reader) error {
