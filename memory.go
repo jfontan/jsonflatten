@@ -6,11 +6,22 @@ import (
 	"io"
 )
 
+// Memory flattens a json document loading it first in memody by standard
+// library json decoder and calling an emitter for each value.
 type Memory struct {
 	States
 	emitter Emitter
 }
 
+// NewMemory creates a new Memory flattener that first loads the whole
+// document in memory. If emitter is nil the values are printed.
+func NewMemory(emitter Emitter) *Memory {
+	return &Memory{
+		emitter: emitter,
+	}
+}
+
+// Parse json and call the provided emitter for each value.
 func (m *Memory) Parse(r io.Reader) error {
 	dec := json.NewDecoder(r)
 

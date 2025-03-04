@@ -10,6 +10,7 @@ import (
 	"pitr.ca/jsontokenizer"
 )
 
+// ParserPitr implements a json value flattener using Pitr tokenizer.
 type ParserPitr struct {
 	States
 	emitter Emitter
@@ -19,6 +20,15 @@ const (
 	readSize = 4 * 1024
 )
 
+// NewParserPitr creates a new parser using Pitr tokenizer. If emmiter is nil
+// a default printer is used.
+func NewParserPitr(emitter Emitter) *ParserPitr {
+	return &ParserPitr{
+		emitter: emitter,
+	}
+}
+
+// Parse json and call the provided emitter for each value.
 func (p *ParserPitr) Parse(r io.Reader) error {
 	if p.emitter == nil {
 		p.emitter = p.print
@@ -59,9 +69,6 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 			}
 
 			p.lastState().advance()
-
-			// default:
-			// 	return fmt.Errorf("invalid delimiter %s", string(v))
 
 		case jsontokenizer.TokString:
 			s := p.lastState()

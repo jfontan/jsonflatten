@@ -8,13 +8,24 @@ import (
 	"strings"
 )
 
+// Emmitter is a function that is called for each value.
 type Emitter func(string, any)
 
+// Parser implements a json value flattener using standard library tokenizer.
 type Parser struct {
 	States
 	emitter Emitter
 }
 
+// NewParserPitr creates a new parser using standard tokenizer. If emmiter is
+// nil a default printer is used.
+func NewParser(emitter Emitter) *Parser {
+	return &Parser{
+		emitter: emitter,
+	}
+}
+
+// Parse json and call the provided emitter for each value.
 func (p *Parser) Parse(r io.Reader) error {
 	if p.emitter == nil {
 		p.emitter = p.print
