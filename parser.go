@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 )
 
 // Emitter is a function that is called for each value.
@@ -13,24 +12,19 @@ type Emitter func(string, any)
 
 // Parser implements a json value flattener using standard library tokenizer.
 type Parser struct {
-	States
-	emitter Emitter
+	commonParser
 }
 
-// NewParserPitr creates a new parser using standard tokenizer. If emmiter is
+// NewParser creates a new parser using standard tokenizer. If emitter is
 // nil a default printer is used.
 func NewParser(emitter Emitter) *Parser {
 	return &Parser{
-		emitter: emitter,
+		commonParser: newCommonParser(emitter),
 	}
 }
 
 // Parse json and call the provided emitter for each value.
 func (p *Parser) Parse(r io.Reader) error {
-	if p.emitter == nil {
-		p.emitter = p.print
-	}
-
 	dec := json.NewDecoder(r)
 
 	for {
@@ -113,48 +107,4 @@ func (p *Parser) Parse(r io.Reader) error {
 			return fmt.Errorf("invalid type: %+v", v)
 		}
 	}
-}
-
-func (p *Parser) commonEmitter(v any) error {
-	s := p.lastState()
-	if s == nil {
-		return fmt.Errorf("single value not supported")
-	}
-
-	p.emit(s.key, v)
-	s.advance()
-
-	return nil
-}
-
-func (p *Parser) emit(k string, v any) {
-	var path path
-	s := p.lastState()
-	if s != nil {
-		path = s.path
-	}
-
-	p.emitter(path.StringWithKey(k), v)
-}
-
-func (p *Parser) print(k string, v any) {
-	var value string
-	switch nv := v.(type) {
-	case string:
-		value = fmt.Sprintf(`"%s"`, nv)
-	default:
-		value = fmt.Sprintf("%v", nv)
-	}
-
-	fmt.Println(k, "=", value)
-}
-
-type path []string
-
-func (p path) StringWithKey(k string) string {
-	return strings.Join(append(p, k), ".")
-}
-
-func (p path) String() string {
-	return strings.Join(p, ".")
 }

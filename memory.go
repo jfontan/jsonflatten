@@ -9,25 +9,20 @@ import (
 // Memory flattens a json document loading it first in memory by standard
 // library json decoder and calling an emitter for each value.
 type Memory struct {
-	States
-	emitter Emitter
+	commonParser
 }
 
 // NewMemory creates a new Memory flattener that first loads the whole
 // document in memory. If emitter is nil the values are printed.
 func NewMemory(emitter Emitter) *Memory {
 	return &Memory{
-		emitter: emitter,
+		commonParser: newCommonParser(emitter),
 	}
 }
 
 // Parse json and call the provided emitter for each value.
 func (m *Memory) Parse(r io.Reader) error {
 	dec := json.NewDecoder(r)
-
-	if m.emitter == nil {
-		m.emitter = m.print
-	}
 
 	var d any
 	err := dec.Decode(&d)
@@ -105,26 +100,4 @@ func (m *Memory) parseValue(v any) error {
 	m.emit(s.key, v)
 
 	return nil
-}
-
-func (p *Memory) emit(k string, v any) {
-	var path path
-	s := p.lastState()
-	if s != nil {
-		path = s.path
-	}
-
-	p.emitter(path.StringWithKey(k), v)
-}
-
-func (p *Memory) print(k string, v any) {
-	var value string
-	switch nv := v.(type) {
-	case string:
-		value = fmt.Sprintf(`"%s"`, nv)
-	default:
-		value = fmt.Sprintf("%v", nv)
-	}
-
-	fmt.Println(k, "=", value)
 }

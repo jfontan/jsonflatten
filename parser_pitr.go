@@ -12,8 +12,7 @@ import (
 
 // ParserPitr implements a json value flattener using Pitr tokenizer.
 type ParserPitr struct {
-	States
-	emitter Emitter
+	commonParser
 }
 
 const (
@@ -24,16 +23,12 @@ const (
 // a default printer is used.
 func NewParserPitr(emitter Emitter) *ParserPitr {
 	return &ParserPitr{
-		emitter: emitter,
+		commonParser: newCommonParser(emitter),
 	}
 }
 
 // Parse json and call the provided emitter for each value.
 func (p *ParserPitr) Parse(r io.Reader) error {
-	if p.emitter == nil {
-		p.emitter = p.print
-	}
-
 	buf := new(strings.Builder)
 
 	dec := jsontokenizer.NewWithSize(r, readSize)
@@ -142,38 +137,4 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 			return fmt.Errorf("invalid type: %d", token)
 		}
 	}
-}
-
-func (p *ParserPitr) commonEmitter(v any) error {
-	s := p.lastState()
-	if s == nil {
-		return fmt.Errorf("single value not supported")
-	}
-
-	p.emit(s.key, v)
-	s.advance()
-
-	return nil
-}
-
-func (p *ParserPitr) emit(k string, v any) {
-	var path path
-	s := p.lastState()
-	if s != nil {
-		path = s.path
-	}
-
-	p.emitter(path.StringWithKey(k), v)
-}
-
-func (p *ParserPitr) print(k string, v any) {
-	var value string
-	switch nv := v.(type) {
-	case string:
-		value = fmt.Sprintf(`"%s"`, nv)
-	default:
-		value = fmt.Sprintf("%v", nv)
-	}
-
-	fmt.Println(k, "=", value)
 }
