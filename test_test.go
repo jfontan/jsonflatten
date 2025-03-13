@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 
@@ -97,8 +98,9 @@ func TestMap(t *testing.T) {
 	m := make(map[string]any)
 
 	p := new(Parser)
-	p.emitter = func(k string, v any) {
+	p.emitter = func(k string, v any) bool {
 		m[k] = v
+		return true
 	}
 
 	err := p.Parse(r)
@@ -112,12 +114,43 @@ func TestMapPitr(t *testing.T) {
 	m := make(map[string]any)
 
 	p := new(Parser)
-	p.emitter = func(k string, v any) {
+	p.emitter = func(k string, v any) bool {
 		m[k] = v
+		return true
 	}
 
 	err := p.Parse(r)
 	require.NoError(t, err)
+
+	require.Equal(t, expected, m)
+}
+
+func TestMapPitrStop(t *testing.T) {
+	r := strings.NewReader(testJson)
+	m := make(map[string]any)
+
+	keys := []string{
+		"array.1.embedded.0",
+		"glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso.0",
+	}
+
+	p := new(Parser)
+	p.emitter = func(k string, v any) bool {
+		if !slices.Contains(keys, k) {
+			return true
+		}
+
+		m[k] = v
+		return len(m) < len(keys)
+	}
+
+	err := p.Parse(r)
+	require.NoError(t, err)
+
+	expected := map[string]any{
+		"glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso.0": "GML",
+		"array.1.embedded.0": float64(1),
+	}
 
 	require.Equal(t, expected, m)
 }
@@ -127,8 +160,9 @@ func TestMapMemory(t *testing.T) {
 	m := make(map[string]any)
 
 	p := new(Memory)
-	p.emitter = func(k string, v any) {
+	p.emitter = func(k string, v any) bool {
 		m[k] = v
+		return true
 	}
 
 	err := p.Parse(r)
@@ -152,7 +186,7 @@ func TestLargePitr(t *testing.T) {
 	require.NoError(t, err)
 
 	p := new(ParserPitr)
-	p.emitter = func(s string, a any) {}
+	p.emitter = func(s string, a any) bool { return true }
 	err = p.Parse(f)
 	require.NoError(t, err)
 }
@@ -161,7 +195,8 @@ func BenchmarkSmallParser(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(Parser)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err := p.Parse(r)
@@ -173,7 +208,8 @@ func BenchmarkSmallParserPitr(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(ParserPitr)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err := p.Parse(r)
@@ -185,7 +221,8 @@ func BenchmarkSmallMemory(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(Memory)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err := p.Parse(r)
@@ -211,7 +248,8 @@ func BenchmarkBigParser(b *testing.B) {
 		require.NoError(b, err)
 
 		p := new(Parser)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err = p.Parse(f)
@@ -229,7 +267,8 @@ func BenchmarkBigParserPitr(b *testing.B) {
 		require.NoError(b, err)
 
 		p := new(ParserPitr)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err = p.Parse(f)
@@ -247,7 +286,8 @@ func BenchmarkBigMemory(b *testing.B) {
 		require.NoError(b, err)
 
 		p := new(Memory)
-		p.emitter = func(k string, v any) {
+		p.emitter = func(k string, v any) bool {
+			return true
 		}
 
 		err = p.Parse(f)

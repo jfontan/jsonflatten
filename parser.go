@@ -7,8 +7,9 @@ import (
 	"io"
 )
 
-// Emitter is a function that is called for each value.
-type Emitter func(string, any)
+// Emitter is a function that is called for each value. If it returns false
+// does not continue to parse the file.
+type Emitter func(string, any) bool
 
 // Parser implements a json value flattener using standard library tokenizer.
 type Parser struct {
@@ -76,30 +77,27 @@ func (p *Parser) Parse(r io.Reader) error {
 				if s.key == "" {
 					s.key = v
 				} else {
-					p.emit(s.key, v)
+					if !p.emit(s.key, v) {
+						return nil
+					}
 					s.key = ""
 				}
 
 			case TypeArray:
-				p.emit(s.key, v)
+				if !p.emit(s.key, v) {
+					return nil
+				}
 				s.advance()
 
 			default:
 				return fmt.Errorf("invalid type %v", s.jsonType)
 			}
 
-		case float64:
+		case float64, bool, nil:
 			if err := p.commonEmitter(v); err != nil {
-				return err
-			}
-
-		case bool:
-			if err := p.commonEmitter(v); err != nil {
-				return err
-			}
-
-		case nil:
-			if err := p.commonEmitter(v); err != nil {
+				if errors.Is(err, errExit) {
+					return nil
+				}
 				return err
 			}
 

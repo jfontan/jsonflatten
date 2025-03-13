@@ -84,12 +84,16 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 				if s.key == "" {
 					s.key = v
 				} else {
-					p.emit(s.key, v)
+					if !p.emit(s.key, v) {
+						return nil
+					}
 					s.key = ""
 				}
 
 			case TypeArray:
-				p.emit(s.key, v)
+				if !p.emit(s.key, v) {
+					return nil
+				}
 				s.advance()
 
 			default:
@@ -113,21 +117,32 @@ func (p *ParserPitr) Parse(r io.Reader) error {
 				return err
 			}
 
-			p.emit(s.key, v)
+			if !p.emit(s.key, v) {
+				return nil
+			}
 			s.advance()
 
 		case jsontokenizer.TokTrue:
 			if err := p.commonEmitter(true); err != nil {
+				if errors.Is(err, errExit) {
+					return nil
+				}
 				return err
 			}
 
 		case jsontokenizer.TokFalse:
 			if err := p.commonEmitter(false); err != nil {
+				if errors.Is(err, errExit) {
+					return nil
+				}
 				return err
 			}
 
 		case jsontokenizer.TokNull:
 			if err := p.commonEmitter(nil); err != nil {
+				if errors.Is(err, errExit) {
+					return nil
+				}
 				return err
 			}
 

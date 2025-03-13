@@ -1,9 +1,12 @@
 package jsonflatten
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
+
+var errExit = errors.New("exit")
 
 type commonParser struct {
 	States
@@ -29,23 +32,27 @@ func (p *commonParser) commonEmitter(v any) error {
 		return fmt.Errorf("single value not supported")
 	}
 
-	p.emit(s.key, v)
+	ok := p.emit(s.key, v)
+	if !ok {
+		return errExit
+	}
+
 	s.advance()
 
 	return nil
 }
 
-func (p *commonParser) emit(k string, v any) {
+func (p *commonParser) emit(k string, v any) bool {
 	var path path
 	s := p.lastState()
 	if s != nil {
 		path = s.path
 	}
 
-	p.emitter(path.StringWithKey(k), v)
+	return p.emitter(path.StringWithKey(k), v)
 }
 
-func (p *commonParser) print(k string, v any) {
+func (p *commonParser) print(k string, v any) bool {
 	var value string
 	switch nv := v.(type) {
 	case string:
@@ -55,6 +62,8 @@ func (p *commonParser) print(k string, v any) {
 	}
 
 	fmt.Println(k, "=", value)
+
+	return true
 }
 
 type path []string
