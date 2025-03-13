@@ -134,15 +134,14 @@ func TestMapPitrStop(t *testing.T) {
 		"glossary.GlossDiv.GlossList.GlossEntry.GlossDef.GlossSeeAlso.0",
 	}
 
-	p := new(Parser)
-	p.emitter = func(k string, v any) bool {
+	p := NewParserPitr(func(k string, v any) bool {
 		if !slices.Contains(keys, k) {
 			return true
 		}
 
 		m[k] = v
 		return len(m) < len(keys)
-	}
+	})
 
 	err := p.Parse(r)
 	require.NoError(t, err)
