@@ -49,6 +49,7 @@ func (p *commonParser) emit(k string, v any) bool {
 		path = s.path
 	}
 
+	// spew.Print(path)
 	return p.emitter(path.StringWithKey(k), v)
 }
 

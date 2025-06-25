@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	jsonv2 "github.com/go-json-experiment/json"
+	"github.com/go-json-experiment/json/jsontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -85,6 +87,15 @@ func TestPrint(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPrintV2(t *testing.T) {
+	// t.Skip()
+	r := strings.NewReader(testJson)
+	p := new(ParserV2)
+	p.emitter = p.print
+	err := p.Parse(r)
+	require.NoError(t, err)
+}
+
 func TestPrintPitr(t *testing.T) {
 	t.Skip()
 	r := strings.NewReader(testJson)
@@ -98,6 +109,22 @@ func TestMap(t *testing.T) {
 	m := make(map[string]any)
 
 	p := new(Parser)
+	p.emitter = func(k string, v any) bool {
+		m[k] = v
+		return true
+	}
+
+	err := p.Parse(r)
+	require.NoError(t, err)
+
+	require.Equal(t, expected, m)
+}
+
+func TestMapV2(t *testing.T) {
+	r := strings.NewReader(testJson)
+	m := make(map[string]any)
+
+	p := new(ParserV2)
 	p.emitter = func(k string, v any) bool {
 		m[k] = v
 		return true
@@ -170,12 +197,39 @@ func TestMapMemory(t *testing.T) {
 	require.Equal(t, expected, m)
 }
 
+func TestMapMemoryV2(t *testing.T) {
+	r := strings.NewReader(testJson)
+	m := make(map[string]any)
+
+	p := new(MemoryV2)
+	p.emitter = func(k string, v any) bool {
+		m[k] = v
+		return true
+	}
+
+	err := p.Parse(r)
+	require.NoError(t, err)
+
+	require.Equal(t, expected, m)
+}
+
 func TestLarge(t *testing.T) {
 	t.Skip()
 	f, err := os.Open("large-file.json")
 	require.NoError(t, err)
 
 	p := new(Parser)
+	err = p.Parse(f)
+	require.NoError(t, err)
+}
+
+func TestLargeV2(t *testing.T) {
+	// t.Skip()
+	f, err := os.Open("large-file.json")
+	require.NoError(t, err)
+
+	p := new(ParserV2)
+	p.emitter = func(s string, a any) bool { return true }
 	err = p.Parse(f)
 	require.NoError(t, err)
 }
@@ -194,6 +248,19 @@ func BenchmarkSmallParser(b *testing.B) {
 	for range b.N {
 		r := strings.NewReader(testJson)
 		p := new(Parser)
+		p.emitter = func(k string, v any) bool {
+			return true
+		}
+
+		err := p.Parse(r)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkSmallParserV2(b *testing.B) {
+	for range b.N {
+		r := strings.NewReader(testJson)
+		p := new(ParserV2)
 		p.emitter = func(k string, v any) bool {
 			return true
 		}
@@ -229,10 +296,31 @@ func BenchmarkSmallMemory(b *testing.B) {
 	}
 }
 
+func BenchmarkSmallMemoryV2(b *testing.B) {
+	for range b.N {
+		r := strings.NewReader(testJson)
+		p := new(MemoryV2)
+		p.emitter = func(k string, v any) bool {
+			return true
+		}
+
+		err := p.Parse(r)
+		require.NoError(b, err)
+	}
+}
+
 func BenchmarkUnmarshalSmall(b *testing.B) {
 	for range b.N {
 		var m any
 		err := json.Unmarshal([]byte(testJson), &m)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkUnmarshalSmallV2(b *testing.B) {
+	for range b.N {
+		var m any
+		err := jsonv2.Unmarshal([]byte(testJson), &m)
 		require.NoError(b, err)
 	}
 }
@@ -247,6 +335,25 @@ func BenchmarkBigParser(b *testing.B) {
 		require.NoError(b, err)
 
 		p := new(Parser)
+		p.emitter = func(k string, v any) bool {
+			return true
+		}
+
+		err = p.Parse(f)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkBigParserV2(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for range b.N {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		p := new(ParserV2)
 		p.emitter = func(k string, v any) bool {
 			return true
 		}
@@ -306,6 +413,22 @@ func BenchmarkUnmarshalBig(b *testing.B) {
 		var m any
 		decoder := json.NewDecoder(f)
 		err = decoder.Decode(&m)
+		require.NoError(b, err)
+	}
+}
+
+func BenchmarkUnmarshalBigV2(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for range b.N {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		var m any
+		decoder := jsontext.NewDecoder(f)
+		err = jsonv2.UnmarshalDecode(decoder, &m)
 		require.NoError(b, err)
 	}
 }
