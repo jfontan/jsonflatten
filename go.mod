@@ -1,11 +1,9 @@
 module github.com/jfontan/jsonflatten
 
-go 1.24
-
-toolchain go1.24.4
+go 1.25
 
 require (
-	github.com/go-json-experiment/json v0.0.0-20250625182306-a9cfae7f3654
+	github.com/go-json-experiment/json v0.0.0-20251027170946-4849db3c2f7e
 	github.com/stretchr/testify v1.10.0
 	pitr.ca/jsontokenizer v0.3.0
 )
