@@ -1,0 +1,30 @@
+goos: linux
+goarch: amd64
+pkg: github.com/jfontan/jsonflatten
+cpu: AMD Ryzen 7 5800X 8-Core Processor             
+                  │      v1      │                 v2                  │                 pitr                  │                 memory                 │
+                  │    sec/op    │   sec/op     vs base                │   sec/op     vs base                  │    sec/op     vs base                  │
+Small-16            20.198µ ± 1%   7.893µ ± 1%  -60.92% (p=0.000 n=10)   5.817µ ± 1%  -71.20% (p=0.000 n=10)     12.674µ ± 1%  -37.25% (p=0.000 n=10)
+Big-16               510.4m ± 1%   157.6m ± 1%  -69.13% (p=0.000 n=10)   124.7m ± 1%  -75.57% (p=0.000 n=10)      277.2m ± 1%  -45.69% (p=0.000 n=10)
+UnmarshalSmall-16    8.613µ ± 0%   5.297µ ± 0%  -38.50% (p=0.000 n=10)
+UnmarshalBig-16      223.5m ± 1%   139.8m ± 3%  -37.45% (p=0.000 n=10)
+geomean              2.111m        979.5µ       -53.59%                  851.6µ       -73.47%                ¹    1.874m       -41.62%                ¹
+¹ benchmark set differs from baseline; geomeans may not be comparable
+
+                  │      v1       │                  v2                  │                  pitr                  │                 memory                 │
+                  │     B/op      │     B/op      vs base                │     B/op      vs base                  │     B/op       vs base                 │
+Small-16            11.039Ki ± 0%   6.562Ki ± 0%  -40.55% (p=0.000 n=10)   7.586Ki ± 0%  -31.28% (p=0.000 n=10)     10.742Ki ± 0%  -2.69% (p=0.000 n=10)
+Big-16              180.66Mi ± 0%   66.42Mi ± 0%  -63.24% (p=0.000 n=10)   52.37Mi ± 0%  -71.01% (p=0.000 n=10)     174.85Mi ± 0%  -3.22% (p=0.000 n=10)
+UnmarshalSmall-16    5.406Ki ± 0%   4.958Ki ± 0%   -8.30% (p=0.000 n=10)
+UnmarshalBig-16     157.01Mi ± 0%   89.13Mi ± 0%  -43.23% (p=0.000 n=10)
+geomean              1.127Mi        670.4Ki       -41.92%                  637.8Ki       -55.37%                ¹    1.354Mi       -2.95%                ¹
+¹ benchmark set differs from baseline; geomeans may not be comparable
+
+                  │     v1      │                 v2                  │                 pitr                  │                memory                 │
+                  │  allocs/op  │  allocs/op   vs base                │  allocs/op   vs base                  │  allocs/op   vs base                  │
+Small-16            360.00 ± 0%   134.00 ± 0%  -62.78% (p=0.000 n=10)    95.00 ± 0%  -73.61% (p=0.000 n=10)     128.00 ± 0%  -64.44% (p=0.000 n=10)
+Big-16              8.870M ± 0%   2.162M ± 0%  -75.62% (p=0.000 n=10)   2.101M ± 0%  -76.32% (p=0.000 n=10)     2.329M ± 0%  -73.75% (p=0.000 n=10)
+UnmarshalSmall-16    93.00 ± 0%    76.00 ± 0%  -18.28% (p=0.000 n=10)
+UnmarshalBig-16     1.776M ± 0%   1.621M ± 0%   -8.71% (p=0.000 n=10)
+geomean             26.95k        13.75k       -48.99%                  14.13k       -75.00%                ¹   17.26k       -69.45%                ¹
+¹ benchmark set differs from baseline; geomeans may not be comparable
