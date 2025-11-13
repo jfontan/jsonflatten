@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/bytedance/sonic"
 	jsonv2 "github.com/go-json-experiment/json"
 	"github.com/go-json-experiment/json/jsontext"
 	"github.com/stretchr/testify/require"
@@ -17,6 +18,7 @@ func BenchmarkSmall(b *testing.B) {
 	b.Run("parser=v2", benchmarkSmallParserV2)
 	b.Run("parser=pitr", benchmarkSmallParserPitr)
 	b.Run("parser=memory", benchmarkSmallMemory)
+	b.Run("parser=sonic", benchmarkSmallSonic)
 }
 
 func BenchmarkBig(b *testing.B) {
@@ -24,16 +26,19 @@ func BenchmarkBig(b *testing.B) {
 	b.Run("parser=v2", benchmarkBigParserV2)
 	b.Run("parser=pitr", benchmarkBigParserPitr)
 	b.Run("parser=memory", benchmarkBigMemory)
+	b.Run("parser=sonic", benchmarkBigSonic)
 }
 
 func BenchmarkUnmarshalSmall(b *testing.B) {
 	b.Run("parser=v1", benchmarkUnmarshalSmall)
 	b.Run("parser=v2", benchmarkUnmarshalSmallV2)
+	b.Run("parser=sonic", benchmarkUnmarshalSmallSonic)
 }
 
 func BenchmarkUnmarshalBig(b *testing.B) {
 	b.Run("parser=v1", benchmarkUnmarshalBig)
 	b.Run("parser=v2", benchmarkUnmarshalBigV2)
+	b.Run("parser=sonic", benchmarkUnmarshalBigSonic)
 }
 
 func benchmarkSmallParser(b *testing.B) {
@@ -121,6 +126,22 @@ func benchmarkSmallMemoryV2(b *testing.B) {
 	}
 }
 
+func benchmarkSmallSonic(b *testing.B) {
+	r := strings.NewReader(testJson)
+
+	for b.Loop() {
+		_, err := r.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		emitter := func(k string, v any) bool {
+			return true
+		}
+		p := NewSonic(emitter)
+
+		err = p.Parse(r)
+		require.NoError(b, err)
+	}
+}
 func benchmarkUnmarshalSmall(b *testing.B) {
 	for b.Loop() {
 		var m any
@@ -133,6 +154,14 @@ func benchmarkUnmarshalSmallV2(b *testing.B) {
 	for b.Loop() {
 		var m any
 		err := jsonv2.Unmarshal([]byte(testJson), &m)
+		require.NoError(b, err)
+	}
+}
+
+func benchmarkUnmarshalSmallSonic(b *testing.B) {
+	for b.Loop() {
+		var m any
+		err := sonic.Unmarshal([]byte(testJson), &m)
 		require.NoError(b, err)
 	}
 }
@@ -213,6 +242,24 @@ func benchmarkBigMemory(b *testing.B) {
 	}
 }
 
+func benchmarkBigSonic(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for b.Loop() {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		emitter := func(k string, v any) bool {
+			return true
+		}
+		p := NewSonic(emitter)
+
+		err = p.Parse(f)
+		require.NoError(b, err)
+	}
+}
 func benchmarkUnmarshalBig(b *testing.B) {
 	f, err := os.Open("large-file.json")
 	require.NoError(b, err)
@@ -241,6 +288,22 @@ func benchmarkUnmarshalBigV2(b *testing.B) {
 		var m any
 		decoder := jsontext.NewDecoder(f)
 		err = jsonv2.UnmarshalDecode(decoder, &m)
+		require.NoError(b, err)
+	}
+}
+
+func benchmarkUnmarshalBigSonic(b *testing.B) {
+	f, err := os.Open("large-file.json")
+	require.NoError(b, err)
+	defer f.Close()
+
+	for b.Loop() {
+		_, err := f.Seek(0, io.SeekStart)
+		require.NoError(b, err)
+
+		var m any
+		decoder := sonic.ConfigDefault.NewDecoder(f)
+		err = decoder.Decode(&m)
 		require.NoError(b, err)
 	}
 }

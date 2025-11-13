@@ -2,29 +2,29 @@ goos: linux
 goarch: amd64
 pkg: github.com/jfontan/jsonflatten
 cpu: AMD Ryzen 7 5800X 8-Core Processor             
-                  │      v1      │                 v2                  │                 pitr                  │                 memory                 │
-                  │    sec/op    │   sec/op     vs base                │   sec/op     vs base                  │    sec/op     vs base                  │
-Small-16            20.198µ ± 1%   7.893µ ± 1%  -60.92% (p=0.000 n=10)   5.817µ ± 1%  -71.20% (p=0.000 n=10)     12.674µ ± 1%  -37.25% (p=0.000 n=10)
-Big-16               510.4m ± 1%   157.6m ± 1%  -69.13% (p=0.000 n=10)   124.7m ± 1%  -75.57% (p=0.000 n=10)      277.2m ± 1%  -45.69% (p=0.000 n=10)
-UnmarshalSmall-16    8.613µ ± 0%   5.297µ ± 0%  -38.50% (p=0.000 n=10)
-UnmarshalBig-16      223.5m ± 1%   139.8m ± 3%  -37.45% (p=0.000 n=10)
-geomean              2.111m        979.5µ       -53.59%                  851.6µ       -73.47%                ¹    1.874m       -41.62%                ¹
+                  │      v1      │                  v2                  │                 pitr                  │                 memory                 │                sonic                │
+                  │    sec/op    │    sec/op     vs base                │   sec/op     vs base                  │    sec/op     vs base                  │   sec/op     vs base                │
+Small-16            20.513µ ± 0%    8.170µ ± 1%  -60.17% (p=0.000 n=10)   6.385µ ± 0%  -68.88% (p=0.000 n=10)     13.362µ ± 0%  -34.86% (p=0.000 n=10)     7.460µ ± 1%  -63.63% (p=0.000 n=10)
+Big-16               525.3m ± 0%    162.1m ± 0%  -69.14% (p=0.000 n=10)   133.0m ± 1%  -74.68% (p=0.000 n=10)      278.9m ± 1%  -46.90% (p=0.000 n=10)     142.9m ± 1%  -72.80% (p=0.000 n=10)
+UnmarshalSmall-16    9.186µ ± 1%    5.961µ ± 0%  -35.11% (p=0.000 n=10)                                                                                    3.828µ ± 0%  -58.33% (p=0.000 n=10)
+UnmarshalBig-16     225.45m ± 1%   147.21m ± 1%  -34.70% (p=0.000 n=10)                                                                                    86.80m ± 2%  -61.50% (p=0.000 n=10)
+geomean              2.173m         1.038m       -52.23%                  921.6µ       -71.92%                ¹    1.931m       -41.19%                ¹   771.4µ       -64.51%
 ¹ benchmark set differs from baseline; geomeans may not be comparable
 
-                  │      v1       │                  v2                  │                  pitr                  │                 memory                 │
-                  │     B/op      │     B/op      vs base                │     B/op      vs base                  │     B/op       vs base                 │
-Small-16            11.039Ki ± 0%   6.562Ki ± 0%  -40.55% (p=0.000 n=10)   7.586Ki ± 0%  -31.28% (p=0.000 n=10)     10.742Ki ± 0%  -2.69% (p=0.000 n=10)
-Big-16              180.66Mi ± 0%   66.42Mi ± 0%  -63.24% (p=0.000 n=10)   52.37Mi ± 0%  -71.01% (p=0.000 n=10)     174.85Mi ± 0%  -3.22% (p=0.000 n=10)
-UnmarshalSmall-16    5.406Ki ± 0%   4.958Ki ± 0%   -8.30% (p=0.000 n=10)
-UnmarshalBig-16     157.01Mi ± 0%   89.13Mi ± 0%  -43.23% (p=0.000 n=10)
-geomean              1.127Mi        670.4Ki       -41.92%                  637.8Ki       -55.37%                ¹    1.354Mi       -2.95%                ¹
+                  │      v1       │                  v2                  │                  pitr                  │                 memory                 │                 sonic                 │
+                  │     B/op      │     B/op      vs base                │     B/op      vs base                  │     B/op       vs base                 │     B/op       vs base                │
+Small-16            11.039Ki ± 0%   6.562Ki ± 0%  -40.55% (p=0.000 n=10)   7.586Ki ± 0%  -31.28% (p=0.000 n=10)     10.742Ki ± 0%  -2.69% (p=0.000 n=10)      9.694Ki ± 0%  -12.18% (p=0.000 n=10)
+Big-16              180.66Mi ± 0%   66.42Mi ± 0%  -63.24% (p=0.000 n=10)   52.37Mi ± 0%  -71.01% (p=0.000 n=10)     174.85Mi ± 0%  -3.22% (p=0.000 n=10)     199.53Mi ± 0%  +10.44% (p=0.000 n=10)
+UnmarshalSmall-16    5.406Ki ± 0%   4.959Ki ± 0%   -8.27% (p=0.000 n=10)                                                                                      6.204Ki ± 0%  +14.75% (p=0.000 n=10)
+UnmarshalBig-16     157.01Mi ± 0%   89.13Mi ± 0%  -43.23% (p=0.000 n=10)                                                                                     181.65Mi ± 0%  +15.69% (p=0.000 n=10)
+geomean              1.127Mi        670.4Ki       -41.92%                  637.8Ki       -55.37%                ¹    1.354Mi       -2.95%                ¹    1.201Mi        +6.52%
 ¹ benchmark set differs from baseline; geomeans may not be comparable
 
-                  │     v1      │                 v2                  │                 pitr                  │                memory                 │
-                  │  allocs/op  │  allocs/op   vs base                │  allocs/op   vs base                  │  allocs/op   vs base                  │
-Small-16            360.00 ± 0%   134.00 ± 0%  -62.78% (p=0.000 n=10)    95.00 ± 0%  -73.61% (p=0.000 n=10)     128.00 ± 0%  -64.44% (p=0.000 n=10)
-Big-16              8.870M ± 0%   2.162M ± 0%  -75.62% (p=0.000 n=10)   2.101M ± 0%  -76.32% (p=0.000 n=10)     2.329M ± 0%  -73.75% (p=0.000 n=10)
-UnmarshalSmall-16    93.00 ± 0%    76.00 ± 0%  -18.28% (p=0.000 n=10)
-UnmarshalBig-16     1.776M ± 0%   1.621M ± 0%   -8.71% (p=0.000 n=10)
-geomean             26.95k        13.75k       -48.99%                  14.13k       -75.00%                ¹   17.26k       -69.45%                ¹
+                  │      v1      │                  v2                  │                 pitr                  │                memory                 │                sonic                │
+                  │  allocs/op   │  allocs/op    vs base                │  allocs/op   vs base                  │  allocs/op   vs base                  │  allocs/op   vs base                │
+Small-16             360.00 ± 0%    134.00 ± 0%  -62.78% (p=0.000 n=10)    95.00 ± 0%  -73.61% (p=0.000 n=10)     128.00 ± 0%  -64.44% (p=0.000 n=10)      81.00 ± 0%  -77.50% (p=0.000 n=10)
+Big-16               8.870M ± 0%    2.162M ± 0%  -75.62% (p=0.000 n=10)   2.101M ± 0%  -76.32% (p=0.000 n=10)     2.329M ± 0%  -73.75% (p=0.000 n=10)     1.264M ± 0%  -85.74% (p=0.000 n=10)
+UnmarshalSmall-16     93.00 ± 0%     76.00 ± 0%  -18.28% (p=0.000 n=10)                                                                                    49.00 ± 0%  -47.31% (p=0.000 n=10)
+UnmarshalBig-16     1775.8k ± 0%   1621.1k ± 0%   -8.71% (p=0.000 n=10)                                                                                   711.5k ± 0%  -59.93% (p=0.000 n=10)
+geomean              26.95k         13.75k       -48.99%                  14.13k       -75.00%                ¹   17.26k       -69.45%                ¹   7.730k       -71.31%
 ¹ benchmark set differs from baseline; geomeans may not be comparable

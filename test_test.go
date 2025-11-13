@@ -209,6 +209,21 @@ func TestMapMemoryV2(t *testing.T) {
 	require.Equal(t, expected, m)
 }
 
+func TestMapSonic(t *testing.T) {
+	r := strings.NewReader(testJson)
+	m := make(map[string]any)
+
+	emitter := func(k string, v any) bool {
+		m[k] = v
+		return true
+	}
+	p := NewSonic(emitter)
+
+	err := p.Parse(r)
+	require.NoError(t, err)
+
+	require.Equal(t, expected, m)
+}
 func TestLarge(t *testing.T) {
 	t.Skip()
 	f, err := os.Open("large-file.json")
